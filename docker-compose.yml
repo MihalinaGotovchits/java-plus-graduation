@@ -85,6 +85,8 @@ services:
   ewm-service:
     build: core/main-service
     container_name: ewm-main-service
+    ports:
+      - "8081:8081"
     depends_on:
       ewm-db:
         condition: service_healthy
