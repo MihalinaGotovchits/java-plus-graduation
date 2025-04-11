@@ -33,16 +33,25 @@ services:
     build: infra/gateway-server
     container_name: gateway-server
     ports:
-      - "8081:8081"
+      - "8080:8080"
     depends_on:
-      config-server:
+      discovery-server:
         condition: service_healthy
-      ewm-service:
+      config-server:
         condition: service_healthy
     networks:
       - ewm-net
     environment:
+      - WAITFORIT_HOST=ewm-service
+      - WAITFORIT_PORT=8081
+      - WAITFORIT_TIMEOUT=60
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - SERVER_PORT=8080
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
 
   stats-server:
     build: stat/stat_server
@@ -86,7 +95,7 @@ services:
     build: core/main-service
     container_name: ewm-main-service
     ports:
-      - "8080:8080"
+      - "8081:8081"
     depends_on:
       ewm-db:
         condition: service_healthy
@@ -97,13 +106,15 @@ services:
     networks:
       - ewm-net
     environment:
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health
+      - MANAGEMENT_ENDPOINT_HEALTH_SHOW-DETAILS=always
       - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm-main
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
       - SERVER_PORT=8081
     healthcheck:
-      test: "curl --fail --silent localhost:8080/actuator/health | grep UP || exit 1"
+      test: "curl --fail --silent localhost:8081/actuator/health | grep UP || exit 1"
       timeout: 5s
       interval: 25s
       retries: 10
