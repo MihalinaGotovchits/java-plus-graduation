@@ -12,8 +12,8 @@
     <artifactId>stat</artifactId>
     <packaging>pom</packaging>
     <modules>
-        <module>stat_client</module>
-        <module>stat_dto</module>
+        <module>stat-client</module>
+        <module>stat-dto</module>
         <module>stat_server</module>
     </modules>
 </project>
