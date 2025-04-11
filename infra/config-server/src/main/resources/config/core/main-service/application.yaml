@@ -18,27 +18,18 @@ spring:
     username: root
     password: root
 
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-    fetch-registry: true
-    register-with-eureka: true
-
-baseurl-statservice: http://localhost:9092
+logging:
+  level:
+    "org.springframework.orm.jpa": INFO
+    "org.springframework.transaction": INFO
+    "org.springframework.transaction.interceptor": TRACE
+    "org.springframework.orm.jpa.JpaTransactionManager": DEBUG
+    "org.hibernate.SQL": DEBUG
+    "org.hibernate.orm.jdbc.bind": trace
 
 discovery:
   services:
-    stats-server-id: stat-service
+    stats-server-id: stat-server
 
-logging:
-  level:
-    org:
-      hibernate:
-        SQL: DEBUG
-        orm.jdbc.bind: trace
-      springframework:
-        orm.jpa: INFO
-        transaction: INFO
-        transaction.interceptor: TRACE
-        orm.jpa.JpaTransactionManager: DEBUG
+server:
+  port: 0
