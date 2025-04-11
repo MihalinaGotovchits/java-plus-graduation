@@ -13,6 +13,9 @@ spring:
         enabled: true
         serviceId: config-server
 
+server:
+  port: 8080
+
 eureka:
   client:
     serviceUrl:
