@@ -1,125 +1,100 @@
 services:
-  discovery-server:
-    build: infra/discovery-server
-    container_name: discovery-server
+  config-server:
+    image: openjdk:17-jdk-slim
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./config:/config
+    environment:
+      - SPRING_PROFILES_ACTIVE=native
+    command: java -jar /app/config-server.jar
+
+  eureka-server:
+    image: openjdk:17-jdk-slim
+    container_name: eureka-server
     ports:
       - "8761:8761"
-    networks:
-      - ewm-net
-    healthcheck:
-      test: "curl --fail --silent discovery-server:8761/actuator/health | grep UP || exit 1"
-      timeout: 5s
-      interval: 20s
-      retries: 5
-
-  config-server:
-    build: infra/config-server
-    container_name: config-server
-    depends_on:
-      discovery-server:
-        condition: service_healthy
-    networks:
-      - ewm-net
     environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
-      - SERVER_PORT=9091
-    healthcheck:
-      test: "curl --fail --silent config-server:9091/actuator/health | grep UP || exit 1"
-      timeout: 5s
-      interval: 30s
-      retries: 5
-
-  gateway-server:
-    build: infra/gateway-server
-    container_name: gateway-server
-    ports:
-      - "8080:8080"
+      - SPRING_PROFILES_ACTIVE=default
+    command: java -jar /app/eureka-server.jar
     depends_on:
-      config-server:
-        condition: service_healthy
-      ewm-service:
-        condition: service_healthy
-    networks:
-      - ewm-net
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - config-server
 
   stats-server:
-    build: stat/stat_server
-    container_name: ewm-stats-server
+    image: openjdk:17-jdk-slim
+    container_name: stats-server
     ports:
       - "9090:9090"
-    depends_on:
-      stats-db:
-        condition: service_healthy
-      config-server:
-        condition: service_healthy
-    networks:
-      - ewm-net
     environment:
+      - SPRING_PROFILES_ACTIVE=default
+      - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/ewm-stats
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
-    healthcheck:
-      test: "curl --fail --silent localhost:9090/actuator/health | grep UP || exit 1"
-      timeout: 5s
-      interval: 15s
-      retries: 10
+    depends_on:
+      - config-server
+      - eureka-server
+      - stats-db
 
   stats-db:
     image: postgres:16.1
-    container_name: postgres-ewm-stats-db
+    container_name: stats-db
     environment:
-      - POSTGRES_PASSWORD=root
-      - POSTGRES_USER=root
       - POSTGRES_DB=ewm-stats
-    networks:
-      - ewm-net
-    healthcheck:
-      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
-      timeout: 5s
-      interval: 10s
-      retries: 15
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+    ports:
+      - "5433:5432"
+    volumes:
+      - stats-db-data:/var/lib/postgresql/data
 
   ewm-service:
-    build: core/main-service
-    container_name: ewm-main-service
-    depends_on:
-      ewm-db:
-        condition: service_healthy
-      config-server:
-        condition: service_healthy
-      stats-server:
-        condition: service_healthy
-    networks:
-      - ewm-net
+    image: openjdk:17-jdk-slim
+    container_name: ewm-service
+    ports:
+      - "8080:8080"
     environment:
+      - SPRING_PROFILES_ACTIVE=default
+      - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm-main
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
-      - SERVER_PORT=8081
-    healthcheck:
-      test: "curl --fail --silent localhost:8081/actuator/health | grep UP || exit 1"
-      timeout: 5s
-      interval: 25s
-      retries: 10
+      - STATS_SERVER_URL=http://stats-server:9090
+    depends_on:
+      - config-server
+      - eureka-server
+      - ewm-db
+      - stats-server
 
   ewm-db:
     image: postgres:16.1
-    container_name: postgres-ewm-main-db
-    networks:
-      - ewm-net
+    container_name: ewm-db
     environment:
-      - POSTGRES_PASSWORD=root
-      - POSTGRES_USER=root
       - POSTGRES_DB=ewm-main
-    healthcheck:
-      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
-      timeout: 5s
-      interval: 10s
-      retries: 15
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+    ports:
+      - "5432:5432"
+    volumes:
+      - ewm-db-data:/var/lib/postgresql/data
 
-networks:
-  ewm-net:
+  api-gateway:
+    image: openjdk:17-jdk-slim
+    container_name: api-gateway
+    ports:
+      - "8081:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=default
+      - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      - config-server
+      - eureka-server
+      - ewm-service
+
+volumes:
+  stats-db-data:
+  ewm-db-data:
