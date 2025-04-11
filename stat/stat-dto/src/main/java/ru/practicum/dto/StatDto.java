@@ -2,6 +2,7 @@ package ru.practicum.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,7 +31,7 @@ public class StatDto {
     @Size(max = 15, groups = Create.class)
     private String ip;
 
-    @NotBlank(groups = Create.class)
+    @NotNull(groups = Create.class)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", shape = JsonFormat.Shape.STRING)
     private LocalDateTime timestamp;
 }

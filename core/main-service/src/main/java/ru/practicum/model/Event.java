@@ -1,6 +1,7 @@
 package ru.practicum.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,6 +22,9 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
+    @Column(name = "annotation")
+    @Size(min = 20, max = 2000)
     private String annotation;
 
     @ManyToOne
