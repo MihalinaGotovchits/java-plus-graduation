@@ -13,6 +13,9 @@ spring:
         enabled: true
         serviceId: config-server
 
+server:
+  port: 8081
+
 eureka:
   client:
     serviceUrl:
@@ -24,4 +27,4 @@ eureka:
     leaseRenewalIntervalInSeconds: 10
 
 stats-server:
-  url: ${STATS_SERVER_URL:http://localhost:9090}
+  url: http://stats-server:9090

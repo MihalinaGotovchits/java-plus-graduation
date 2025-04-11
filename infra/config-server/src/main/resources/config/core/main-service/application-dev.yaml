@@ -36,4 +36,4 @@ discovery:
     stats-server-id: stat-server
 
 server:
-  port: 0
+  port: 8081
