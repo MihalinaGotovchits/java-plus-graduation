@@ -16,41 +16,44 @@ import java.util.List;
 @Component
 public class StatClient extends BaseClient {
 
-    private final String serverUrl;
+    @Value("${baseurl-statservice}")
+    private String serverUrl;
 
-    public StatClient(@Value("${baseurl-statservice:http://localhost:9092}") String serverUrl) {
-        super(new RestTemplate());
-        this.serverUrl = serverUrl;
+    public StatClient() {
+        super(createRestTemplate());
+    }
+
+    private static RestTemplate createRestTemplate() {
+        return new RestTemplate();
     }
 
     public ResponseEntity<Object> addStatEvent(StatDto statDto) {
-        String url = UriComponentsBuilder.fromHttpUrl(serverUrl)
-                .path("/hit")
-                .build()
-                .toUriString();
+        UriComponentsBuilder uri = UriComponentsBuilder.fromHttpUrl(serverUrl).path("/hit");
+        String url = uri.build().toUriString();
         return post(url, statDto);
     }
 
-    public List<StatResponseDto> readStatEvent(String start, String end,
-                                               @Nullable List<String> uris, boolean unique) {
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(serverUrl)
-                .path("/stats")
-                .queryParam("unique", unique);
+    public List<StatResponseDto> readStatEvent(String start, String end, @Nullable List<String> uris, boolean unique) {
+        UriComponentsBuilder uri = UriComponentsBuilder.fromHttpUrl(serverUrl).path("/stats");
 
         if (start != null) {
-            uriBuilder.queryParam("start", encode(start));
+            uri.queryParam("start", encode(start));
         }
         if (end != null) {
-            uriBuilder.queryParam("end", encode(end));
+            uri.queryParam("end", encode(end));
         }
-        if (uris != null && !uris.isEmpty()) {
-            uriBuilder.queryParam("uris", String.join(",", uris));
+        if (uris != null) {
+            uri.queryParam("uris", uris);
         }
-
-        return get(uriBuilder.build().toUriString(), null);
+        String url = uri.build().toUriString();
+        return get(url, null);
     }
 
     private String encode(String value) {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8);
+        if (value != null) {
+            return URLEncoder.encode(value, StandardCharsets.UTF_8);
+        } else {
+            return value;
+        }
     }
 }
