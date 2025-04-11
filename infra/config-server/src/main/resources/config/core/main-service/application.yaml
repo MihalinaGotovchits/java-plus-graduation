@@ -18,7 +18,6 @@ spring:
     username: root
     password: root
 
-# Добавленное свойство
 baseurl-statservice: http://localhost:9090
 
 logging:
