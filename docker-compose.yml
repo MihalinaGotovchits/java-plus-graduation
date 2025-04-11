@@ -45,7 +45,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
 
   stats-server:
-    build: stat/stat-server
+    build: stat/stat_server
     container_name: ewm-stats-server
     ports:
       - "9090:9090"
