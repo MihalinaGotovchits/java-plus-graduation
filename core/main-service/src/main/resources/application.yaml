@@ -24,4 +24,4 @@ eureka:
     leaseRenewalIntervalInSeconds: 10
 
 stats-server:
-  url: http://localhost:9090
+  url: ${STATS_SERVER_URL:http://localhost:9090}
