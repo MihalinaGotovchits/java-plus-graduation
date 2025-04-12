@@ -18,10 +18,6 @@ spring:
     url: jdbc:postgresql://localhost:5432/ewm-stats
     username: root
     password: root
-jpa:
-  hibernate:
-    ddl-auto: update
-  database-platform: org.hibernate.dialect.PostgreSQLDialect
 
 logging:
   level:
