@@ -290,14 +290,12 @@ public class EventServiceImpl implements EventService {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .toList();
-        //Не очень понял, как обрабатывать это условие:
-        // "если для события лимит заявок равен 0 или отключена пре-модерация заявок, то подтверждение заявок не требуется"
         if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
             log.info("Заявки подтверждать не требуется");
             return null;
         }
 
-        log.info("Заявки:  Лимит: {}, а заявок {}, разница между ними: {}", participantsLimit,
+        log.debug("Заявки:  Лимит: {}, а заявок {}, разница между ними: {}", participantsLimit,
                 statusUpdateRequest.getRequestIds().size(), (participantsLimit
                         - statusUpdateRequest.getRequestIds().size()));
 

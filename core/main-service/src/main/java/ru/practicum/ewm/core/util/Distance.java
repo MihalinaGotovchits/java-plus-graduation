@@ -1,7 +1,10 @@
 package ru.practicum.ewm.core.util;
 
+import lombok.experimental.UtilityClass;
+
 import static java.lang.Math.*;
 
+@UtilityClass
 public class Distance {
     public static double getDistance(double lat1, double lon1, double lat2, double lon2) {
         final int DEGREE_180 = 180;
