@@ -21,6 +21,14 @@ spring:
     console:
       enabled: true
 
+grpc:
+  client:
+    collector:
+      address: 'discovery:///collector'
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
+
 logging:
   level:
     "org.springframework.orm.jpa": INFO

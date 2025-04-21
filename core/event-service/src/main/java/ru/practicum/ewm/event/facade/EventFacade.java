@@ -5,6 +5,7 @@ import ru.practicum.ewm.dto.event.*;
 import ru.practicum.ewm.dto.request.ParticipationRequestDto;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 public interface EventFacade {
     EventFullDto addEvent(Long id, NewEventDto newEventDto);
@@ -19,7 +20,7 @@ public interface EventFacade {
 
     EventFullDto update(Long eventId, UpdateEventAdminRequestDto updateEventAdminRequestDto);
 
-    EventFullDto get(Long eventId, HttpServletRequest request);
+    EventFullDto get(Long eventId, Long userId, HttpServletRequest request);
 
     List<EventFullDto> get(EventAdminFilterParamsDto filters, int from, int size);
 
@@ -31,4 +32,8 @@ public interface EventFacade {
                                                        EventRequestStatusUpdateRequestDto requestStatusUpdateRequest);
 
     List<EventFullDto> getByLocation(Long locationId);
+
+    public Stream<RecommendedEventDto> getRecommendations(Long userId, int limit);
+
+    void addLike(Long userId, Long eventId);
 }
