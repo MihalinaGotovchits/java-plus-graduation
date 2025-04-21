@@ -10,6 +10,7 @@ grpc:
 
 analyzer:
   kafka:
+    config:
     bootstrap-servers: localhost:9092
     user-actions-consumer-group-id: analyzer.user.actions
     events-similarity-consumer-group-id: analyzer.events.similarity

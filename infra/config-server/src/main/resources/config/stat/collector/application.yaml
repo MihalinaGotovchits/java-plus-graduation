@@ -10,6 +10,7 @@ grpc:
 
 collector:
   kafka:
+    config:
     bootstrap-servers: localhost:9092
     client-id-config: producer-1
     producer-key-serializer: org.apache.kafka.common.serialization.StringSerializer
