@@ -98,6 +98,8 @@ services:
     depends_on:
       config-server:
         condition: service_healthy
+      kafka:
+        condition: service_healthy
     networks:
       - ewm-net
     environment:
