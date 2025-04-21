@@ -11,7 +11,7 @@ grpc:
 analyzer:
   kafka:
     config:
-      bootstrap-servers: "kafka:29092"
+      bootstrap-servers: "localhost:9092"
 
       user-action-consumer:
         group-id: "action-analyzer-group"
