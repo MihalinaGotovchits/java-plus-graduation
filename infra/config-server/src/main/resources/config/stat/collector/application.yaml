@@ -1,6 +1,16 @@
+grpc:
+  server:
+    port: 0
+  client:
+    collector:
+      address: 'discovery:///collector'
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
+
 collector:
   kafka:
-      bootstrap-servers: localhost:9092
+      bootstrap-servers: localhost:29092
       client-id-config: "producer-1"
       producer-key-serializer: "org.apache.kafka.common.serialization.StringSerializer"
       producer-value-serializer: "ru.practicum.avro.AvroSerializer"
