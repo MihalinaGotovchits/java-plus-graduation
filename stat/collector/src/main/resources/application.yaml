@@ -18,8 +18,6 @@ eureka:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
   instance:
-    metadata-map:
-      grpc.port: ${GRPC_SERVER_PORT:9000}
     preferIpAddress: true
     hostname: localhost
     instance-id: "${spring.application.name}:${random.value}"
