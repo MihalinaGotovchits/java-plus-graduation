@@ -22,6 +22,8 @@ eureka:
     hostname: localhost
     instance-id: "${spring.application.name}:${random.value}"
     leaseRenewalIntervalInSeconds: 10
+    metadata-map:
+      grpc-port: ${grpc.server.port}
 
 server:
   port: ${SERVER_PORT:0}
