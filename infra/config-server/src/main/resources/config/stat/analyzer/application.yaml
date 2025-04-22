@@ -47,6 +47,6 @@ spring:
       enabled: ALWAYS
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://stat-db:5432/ewm-stat
+    url: jdbc:postgresql://analyzer-db:5432/ewm-stats-analyzer-db
     username: root
     password: root
