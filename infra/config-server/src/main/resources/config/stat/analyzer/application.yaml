@@ -1,52 +1,49 @@
-grpc:
-  server:
-    port: 0
-  client:
-    analyzer:
-      address: 'discovery:///analyzer'
-      enableKeepAlive: true
-      keepAliveWithoutCalls: true
-      negotiationType: plaintext
+server:
+  port: 0
 
-analyzer:
-  kafka:
-    bootstrap-servers: localhost:9092
-
-    user-action-consumer:
-      group-id: "action-analyzer-group"
-      client-id: "action-consumer-1"
-      key-deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
-      value-deserializer: "ru.practicum.avro.UserActionDeserializer"
-      attempt-timeout: 1000
-      enable-auto-commit: "false"
-
-    event-similarity-consumer:
-      group-id: "similarity-analyzer-group"
-      client-id: "similarity-consumer-1"
-      key-deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
-      value-deserializer: "ru.practicum.avro.EventSimilarityDeserializer"
-      attempt-timeout: 1000
-      enable-auto-commit: "false"
-
-    user-action-topic: "stats.user-actions.v1"
-    events-similarity-topic: "stats.events-similarity.v1"
+kafka:
+  topic:
+    actions: stats.user-actions.v1
+    similarity: stats.events-similarity.v1
+  bootstrapServers: localhost:9092
+  group-id:
+    user-actions: user-actions
+    event-similarity: event-similarity
 
 spring:
   jpa:
+    hibernate.ddl-auto: none
     show-sql: true
-    hibernate:
-      ddl-auto: none
     properties:
       hibernate:
         format_sql: true
-  sql:
-    init:
-      mode: always
-  output:
-    ansi:
-      enabled: ALWAYS
+  sql.init.mode: always
+
+logging.level:
+  org.springframework.orm.jpa: INFO
+  org.springframework.transaction: INFO
+  ru.practicum: DEBUG
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: default
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://stat-db:5432/ewm-stat
+    url: jdbc:postgresql://localhost:5432/analyzer
     username: root
     password: root
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:analyzer
+    username: stats
+    password: stats
