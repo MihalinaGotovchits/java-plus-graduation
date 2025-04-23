@@ -13,17 +13,6 @@ spring:
         use-random-policy: true
         max-interval: 10000
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-  endpoint:
-    gateway:
-      enabled: true
-    health:
-      show-details: always
-
 eureka:
   instance:
     prefer-ip-address: true
