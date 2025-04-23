@@ -2,13 +2,21 @@ server:
   port: 0
 
 kafka:
-  topic:
-    actions: stats.user-actions.v1
-    similarity: stats.events-similarity.v1
   bootstrapServers: localhost:9092
-  group-id:
-    user-actions: user-actions
-    event-similarity: event-similarity
+  userActionTopic: stats.user-actions.v1
+  eventsSimilarityTopic: stats.events-similarity.v1
+  userActionConsumer:
+    groupId: user-actions
+    clientId: user-actions-client
+    keyDeserializer: org.apache.kafka.common.serialization.StringDeserializer
+    valueDeserializer: ru.practicum.avro.UserActionDeserializer
+    enableAutoCommit: "false"
+  eventSimilarityConsumer:
+    groupId: event-similarity
+    clientId: event-similarity-client
+    keyDeserializer: org.apache.kafka.common.serialization.StringDeserializer
+    valueDeserializer: ru.practicum.avro.EventSimilarityDeserializer
+    enableAutoCommit: "false"
 
 spring:
   jpa:
