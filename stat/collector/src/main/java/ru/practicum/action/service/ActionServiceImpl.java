@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 import ru.practicum.action.mapper.UserActionMapper;
 import ru.practicum.action.model.UserAction;
 import ru.practicum.config.KafkaConfig;
+import ru.practicum.ewm.stat.avro.UserActionAvro;
+
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -20,11 +23,15 @@ public class ActionServiceImpl implements ActionService {
 
     @Override
     public void collectUserAction(UserAction userAction) {
-        log.info("ActionService: call collectUserAction for UserAction = {}", userAction);
-        send(kafkaConfig.getKafkaProperties().getUserActionTopic(),
-                userAction.getEventId().toString(),
-                userAction.getTimestamp().toEpochMilli(),
-                UserActionMapper.toUserActionAvro(userAction));
+        Objects.requireNonNull(userAction, "UserAction cannot be null");
+
+        String topic = kafkaConfig.getKafkaProperties().getUserActionTopic();
+        Objects.requireNonNull(topic, "Kafka topic is not configured!");
+
+        log.info("Sending UserAction to Kafka. Topic: {}, EventID: {}", topic, userAction.getEventId());
+
+        UserActionAvro avroRecord = UserActionMapper.toUserActionAvro(userAction);
+        send(topic, userAction.getEventId().toString(), userAction.getTimestamp().toEpochMilli(), avroRecord);
     }
 
     private void send(String topic, String key, Long timestamp, SpecificRecordBase specificRecordBase) {
