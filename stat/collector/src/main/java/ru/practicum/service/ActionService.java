@@ -1,4 +1,4 @@
-package ru.practicum.action.service;
+package ru.practicum.service;
 
 
 import ru.practicum.action.model.UserAction;

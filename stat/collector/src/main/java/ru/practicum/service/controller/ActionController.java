@@ -1,4 +1,4 @@
-package ru.practicum.action;
+package ru.practicum.service.controller;
 
 import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
 import ru.practicum.action.mapper.UserActionMapper;
-import ru.practicum.action.service.ActionService;
+import ru.practicum.service.ActionService;
 import ru.practicum.grpc.stat.action.UserActionProto;
 import ru.practicum.grpc.stat.collector.UserActionControllerGrpc;
 

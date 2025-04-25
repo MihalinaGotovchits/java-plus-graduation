@@ -1,4 +1,4 @@
-package ru.practicum.action.service;
+package ru.practicum.service;
 
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
