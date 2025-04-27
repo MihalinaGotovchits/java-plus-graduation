@@ -11,7 +11,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import ru.practicum.ewm.stat.avro.UserActionAvro;
+import ru.practicum.ewm.stats.avro.UserActionAvro;
 
 import java.util.Properties;
 
