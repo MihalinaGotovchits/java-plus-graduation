@@ -28,10 +28,11 @@ public class ActionServiceImpl implements ActionService {
         String topic = kafkaConfig.getKafkaProperties().getUserActionTopic();
         Objects.requireNonNull(topic, "Kafka topic is not configured!");
 
-        log.info("Sending UserAction to Kafka. Topic: {}, EventID: {}", topic, userAction.getEventId());
+        log.info("Sending UserAction to Kafka. Topic: {}, UserID: {}, EventID: {}",
+                topic, userAction.getUserId(), userAction.getEventId());
 
         UserActionAvro avroRecord = UserActionMapper.toUserActionAvro(userAction);
-        send(topic, userAction.getEventId(), userAction.getTimestamp().toEpochMilli(), avroRecord);
+        send(topic, userAction.getUserId(), userAction.getTimestamp().toEpochMilli(), avroRecord);
     }
 
     private void send(String topic, Long key, Long timestamp, SpecificRecordBase specificRecordBase) {
