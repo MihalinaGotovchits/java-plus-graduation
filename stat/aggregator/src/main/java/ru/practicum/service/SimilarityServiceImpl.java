@@ -17,7 +17,7 @@ import java.util.*;
 @RequiredArgsConstructor
 @Slf4j
 public class SimilarityServiceImpl implements SimilarityService {
-    private final Producer<String, SpecificRecordBase> producer;
+    private final Producer<Long, SpecificRecordBase> producer;
     private final KafkaConfig kafkaConfig;
 
     private final Map<Long, Map<Long, Double>> eventWeights = new HashMap<>(); //Map<eventId, Map<userId, Weight>>
@@ -73,11 +73,11 @@ public class SimilarityServiceImpl implements SimilarityService {
 
     @Override
     public void collectEventSimilarity(EventSimilarityAvro eventSimilarityAvro) {
-        ProducerRecord<String, SpecificRecordBase> rec = new ProducerRecord<>(
+        ProducerRecord<Long, SpecificRecordBase> rec = new ProducerRecord<>(
                 kafkaConfig.getKafkaProperties().getEventsSimilarityTopic(),
                 null,
                 eventSimilarityAvro.getTimestamp().toEpochMilli(),
-                String.valueOf(eventSimilarityAvro.getEventA()),
+                eventSimilarityAvro.getEventA(),
                 eventSimilarityAvro);
         producer.send(rec);
     }

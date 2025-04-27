@@ -5,18 +5,26 @@ kafka:
   bootstrapServers: localhost:9092
   userActionTopic: stats.user-actions.v1
   eventsSimilarityTopic: stats.events-similarity.v1
+
   userActionConsumer:
-    groupId: user-actions
-    clientId: user-actions-client
-    keyDeserializer: org.apache.kafka.common.serialization.StringDeserializer
+    groupId: aggregator-group
+    clientId: aggregator-consumer
+    keyDeserializer: org.apache.kafka.common.serialization.LongDeserializer
     valueDeserializer: ru.practicum.avro.UserActionDeserializer
     enableAutoCommit: "false"
+    maxPollRecords: 500
+    maxPollIntervalMs: 300000
+    sessionTimeoutMs: 10000
+
   eventSimilarityConsumer:
     groupId: event-similarity
     clientId: event-similarity-client
-    keyDeserializer: org.apache.kafka.common.serialization.StringDeserializer
+    keyDeserializer: org.apache.kafka.common.serialization.LongDeserializer
     valueDeserializer: ru.practicum.avro.EventSimilarityDeserializer
     enableAutoCommit: "false"
+    maxPollRecords: 500
+    maxPollIntervalMs: 300000
+    sessionTimeoutMs: 10000
 
 spring:
   jpa:
@@ -31,18 +39,6 @@ logging.level:
   org.springframework.orm.jpa: INFO
   org.springframework.transaction: INFO
   ru.practicum: DEBUG
-
----
-
-spring:
-  config:
-    activate:
-      on-profile: default
-  datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/analyzer
-    username: root
-    password: root
 
 ---
 

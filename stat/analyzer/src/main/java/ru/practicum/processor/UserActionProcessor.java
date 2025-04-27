@@ -22,7 +22,7 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 public class UserActionProcessor implements Runnable {
-    private final Consumer<String, UserActionAvro> consumer;
+    private final Consumer<Long, UserActionAvro> consumer;
     private final KafkaConfig kafkaConfig;
     private final Map<TopicPartition, OffsetAndMetadata> currentOffsets = new HashMap<>();
     private final RecommendationService recommendationService;
@@ -33,11 +33,11 @@ public class UserActionProcessor implements Runnable {
         try {
             consumer.subscribe(List.of(kafkaConfig.getKafkaProperties().getUserActionTopic()));
             while (true) {
-                ConsumerRecords<String, UserActionAvro> records = consumer
+                ConsumerRecords<Long, UserActionAvro> records = consumer
                         .poll(Duration.ofMillis(kafkaConfig.getKafkaProperties()
                                 .getUserActionConsumer().getAttemptTimeout()));
                 int count = 0;
-                for (ConsumerRecord<String, UserActionAvro> record : records) {
+                for (ConsumerRecord<Long, UserActionAvro> record : records) {
                     handleRecord(record);
                     manageOffsets(record, count, consumer);
                     count++;
@@ -61,14 +61,14 @@ public class UserActionProcessor implements Runnable {
         }
     }
 
-    private void handleRecord(ConsumerRecord<String, UserActionAvro> consumerRecord) throws InterruptedException {
+    private void handleRecord(ConsumerRecord<Long, UserActionAvro> consumerRecord) throws InterruptedException {
         log.info("handleRecord {}", consumerRecord);
         recommendationService.saveUserAction(consumerRecord.value());
     }
 
-    private void manageOffsets(ConsumerRecord<String, UserActionAvro> consumerRecord,
+    private void manageOffsets(ConsumerRecord<Long, UserActionAvro> consumerRecord,
                                int count,
-                               Consumer<String, UserActionAvro> consumer) {
+                               Consumer<Long, UserActionAvro> consumer) {
         currentOffsets.put(
                 new TopicPartition(consumerRecord.topic(), consumerRecord.partition()),
                 new OffsetAndMetadata(consumerRecord.offset() + 1)

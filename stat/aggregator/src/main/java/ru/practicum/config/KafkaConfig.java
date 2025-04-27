@@ -27,7 +27,7 @@ public class KafkaConfig {
     }
 
     @Bean
-    public Producer<String, SpecificRecordBase> producer() {
+    public Producer<Long, SpecificRecordBase> producer() {
         Properties properties = new Properties();
         properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
         properties.put(ProducerConfig.CLIENT_ID_CONFIG, kafkaProperties.getProducerClientIdConfig());
@@ -38,7 +38,7 @@ public class KafkaConfig {
     }
 
     @Bean
-    public KafkaConsumer<String, UserActionAvro> consumer() {
+    public KafkaConsumer<Long, UserActionAvro> consumer() {
         Properties props = new Properties();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
         props.put(ConsumerConfig.GROUP_ID_CONFIG, kafkaProperties.getConsumerGroupId());
