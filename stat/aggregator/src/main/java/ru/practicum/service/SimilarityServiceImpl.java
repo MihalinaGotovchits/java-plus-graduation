@@ -7,9 +7,9 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.stereotype.Service;
 import ru.practicum.config.KafkaConfig;
-import ru.practicum.ewm.stat.avro.ActionTypeAvro;
-import ru.practicum.ewm.stat.avro.EventSimilarityAvro;
-import ru.practicum.ewm.stat.avro.UserActionAvro;
+import ru.practicum.ewm.stats.avro.ActionTypeAvro;
+import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
+import ru.practicum.ewm.stats.avro.UserActionAvro;
 
 import java.util.*;
 

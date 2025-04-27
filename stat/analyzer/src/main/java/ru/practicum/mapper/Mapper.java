@@ -1,8 +1,8 @@
 package ru.practicum.mapper;
 
-import ru.practicum.ewm.stat.avro.ActionTypeAvro;
-import ru.practicum.ewm.stat.avro.EventSimilarityAvro;
-import ru.practicum.ewm.stat.avro.UserActionAvro;
+import ru.practicum.ewm.stats.avro.ActionTypeAvro;
+import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
+import ru.practicum.ewm.stats.avro.UserActionAvro;
 import ru.practicum.grpc.stat.request.RecommendedEventProto;
 import ru.practicum.model.ActionType;
 import ru.practicum.model.EventSimilarity;

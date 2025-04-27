@@ -1,6 +1,6 @@
 package ru.practicum.avro;
 
-import ru.practicum.ewm.stat.avro.EventSimilarityAvro;
+import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 
 public class EventSimilarityDeserializer extends BaseAvroDeserializer<EventSimilarityAvro> {
     public EventSimilarityDeserializer() {

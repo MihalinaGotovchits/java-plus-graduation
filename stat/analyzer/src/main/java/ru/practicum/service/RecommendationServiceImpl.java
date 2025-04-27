@@ -3,7 +3,7 @@ package ru.practicum.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.ewm.stat.avro.UserActionAvro;
+import ru.practicum.ewm.stats.avro.UserActionAvro;
 import ru.practicum.grpc.stat.request.InteractionsCountRequestProto;
 import ru.practicum.grpc.stat.request.RecommendedEventProto;
 import ru.practicum.grpc.stat.request.SimilarEventsRequestProto;

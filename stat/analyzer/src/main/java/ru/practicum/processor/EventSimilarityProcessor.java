@@ -10,7 +10,7 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.springframework.stereotype.Component;
 import ru.practicum.config.KafkaConfig;
-import ru.practicum.ewm.stat.avro.EventSimilarityAvro;
+import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.practicum.mapper.Mapper;
 import ru.practicum.model.EventSimilarity;
 import ru.practicum.repository.EventSimilarityRepository;

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.action.mapper.UserActionMapper;
 import ru.practicum.action.model.UserAction;
 import ru.practicum.config.KafkaConfig;
-import ru.practicum.ewm.stat.avro.UserActionAvro;
+import ru.practicum.ewm.stats.avro.UserActionAvro;
 
 import java.util.Objects;
 

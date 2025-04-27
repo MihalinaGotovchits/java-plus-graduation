@@ -1,6 +1,6 @@
 package ru.practicum.service;
 
-import ru.practicum.ewm.stat.avro.UserActionAvro;
+import ru.practicum.ewm.stats.avro.UserActionAvro;
 import ru.practicum.grpc.stat.request.InteractionsCountRequestProto;
 import ru.practicum.grpc.stat.request.RecommendedEventProto;
 import ru.practicum.grpc.stat.request.SimilarEventsRequestProto;

@@ -10,7 +10,7 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.springframework.stereotype.Component;
 import ru.practicum.config.KafkaConfig;
-import ru.practicum.ewm.stat.avro.UserActionAvro;
+import ru.practicum.ewm.stats.avro.UserActionAvro;
 import ru.practicum.service.RecommendationService;
 
 import java.time.Duration;
