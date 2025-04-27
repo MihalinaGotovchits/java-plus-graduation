@@ -18,7 +18,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 @Slf4j
 public class ActionServiceImpl implements ActionService {
-    private final Producer<String, SpecificRecordBase> producer;
+    private final Producer<Long, SpecificRecordBase> producer;
     private final KafkaConfig kafkaConfig;
 
     @Override
@@ -31,11 +31,11 @@ public class ActionServiceImpl implements ActionService {
         log.info("Sending UserAction to Kafka. Topic: {}, EventID: {}", topic, userAction.getEventId());
 
         UserActionAvro avroRecord = UserActionMapper.toUserActionAvro(userAction);
-        send(topic, userAction.getEventId().toString(), userAction.getTimestamp().toEpochMilli(), avroRecord);
+        send(topic, userAction.getEventId(), userAction.getTimestamp().toEpochMilli(), avroRecord);
     }
 
-    private void send(String topic, String key, Long timestamp, SpecificRecordBase specificRecordBase) {
-        ProducerRecord<String, SpecificRecordBase> rec = new ProducerRecord<>(
+    private void send(String topic, Long key, Long timestamp, SpecificRecordBase specificRecordBase) {
+        ProducerRecord<Long, SpecificRecordBase> rec = new ProducerRecord<>(
                 topic,
                 null,
                 timestamp,
