@@ -1,4 +1,4 @@
-@namespace("ru.practicum.ewm.stats.avro")
+@namespace("ru.practicum.ewm.stat.avro")
 
 protocol EventSimilarityProtocol {
 	record EventSimilarityAvro {
