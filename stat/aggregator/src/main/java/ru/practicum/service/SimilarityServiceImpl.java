@@ -21,122 +21,162 @@ public class SimilarityServiceImpl implements SimilarityService {
     private final Producer<Long, SpecificRecordBase> producer;
     private final KafkaConfig kafkaConfig;
 
-    private final Map<Long, Map<Long, Double>> eventWeights = new HashMap<>();
-    private final Map<Long, Double> eventSummaryWeights = new HashMap<>();
-    private final Map<Long, Map<Long, Double>> eventMinSummaryWeights = new HashMap<>();
+    // Хранит максимальные веса действий пользователей для каждого мероприятия
+    // Формат: eventId -> (userId -> maxWeight)
+    private final Map<Long, Map<Long, Double>> eventUserWeights = new HashMap<>();
+
+    // Хранит суммарные веса для каждого мероприятия
+    // Формат: eventId -> totalWeight (S_i)
+    private final Map<Long, Double> eventTotalWeights = new HashMap<>();
+
+    // Хранит суммы минимальных весов для пар мероприятий
+    // Формат: firstEventId -> (secondEventId -> sumOfMinWeights), где firstEventId < secondEventId
+    private final Map<Long, Map<Long, Double>> pairMinWeights = new HashMap<>();
 
     @Override
     public List<EventSimilarityAvro> updateSimilarity(UserActionAvro userAction) {
-        log.info("updateSimilarity for userAction = {}", userAction);
-        List<EventSimilarityAvro> result = new ArrayList<>();
+        log.info("Обработка действия пользователя {} для мероприятия {}",
+                userAction.getUserId(), userAction.getEventId());
 
+        List<EventSimilarityAvro> results = new ArrayList<>();
         Long eventId = userAction.getEventId();
         Long userId = userAction.getUserId();
-        double receivedWeight = getWeightByActionType(userAction.getActionType());
-        double oldWeight = addOrUpdateEventWeightForUser(eventId, userId, receivedWeight);
-        double newWeight = Math.max(oldWeight, receivedWeight);
 
-        if (oldWeight != newWeight) {
-            eventSummaryWeights.put(eventId, eventSummaryWeights.getOrDefault(eventId, 0.0) + newWeight - oldWeight);
-            reCalcEventMinSummaryWeights(eventId, userId);
+        // Получаем вес действия в зависимости от типа
+        double newWeight = getWeightByActionType(userAction.getActionType());
 
-            for (Long secondEvent : eventWeights.keySet()) {
-                if (!eventId.equals(secondEvent)) {
-                    long eventA = Math.min(eventId, secondEvent);
-                    long eventB = Math.max(eventId, secondEvent);
-                    double sumWeightA = eventSummaryWeights.getOrDefault(eventA, 0.0);
-                    double sumWeightB = eventSummaryWeights.getOrDefault(eventB, 0.0);
+        // Инициализируем структуры данных при первом обращении
+        eventUserWeights.putIfAbsent(eventId, new HashMap<>());
 
-                    double score = 0.0;
-                    if (sumWeightA > 0 && sumWeightB > 0) {
-                        score = getEventMinSummaryWeights(eventA, eventB) /
-                                (Math.sqrt(sumWeightA) * Math.sqrt(sumWeightB));
-                        score = Math.round(score * 100.0) / 100.0;
-                    }
+        // Получаем текущий вес пользователя для этого мероприятия
+        double oldWeight = eventUserWeights.get(eventId).getOrDefault(userId, 0.0);
 
-                    if (score > 0) {
-                        EventSimilarityAvro eventSimilarity = EventSimilarityAvro.newBuilder()
-                                .setEventA(eventA)
-                                .setEventB(eventB)
-                                .setScore(score)
-                                .setTimestamp(Instant.now())
-                                .build();
-                        result.add(eventSimilarity);
-                    }
+        // Если вес не изменился - пропускаем пересчет
+        if (Math.abs(newWeight - oldWeight) < 0.00001) {
+            return results;
+        }
+
+        // Обновляем вес пользователя для мероприятия
+        eventUserWeights.get(eventId).put(userId, newWeight);
+
+        // Обновляем общий вес для мероприятия
+        double eventTotalWeight = eventTotalWeights.getOrDefault(eventId, 0.0) + (newWeight - oldWeight);
+        eventTotalWeights.put(eventId, eventTotalWeight);
+
+        // Пересчитываем схожесть с другими мероприятиями
+        for (Map.Entry<Long, Map<Long, Double>> entry : eventUserWeights.entrySet()) {
+            Long otherEventId = entry.getKey();
+
+            // Пропускаем текущее мероприятие
+            if (otherEventId.equals(eventId)) continue;
+
+            // Учитываем только мероприятия, с которыми пользователь взаимодействовал
+            if (entry.getValue().containsKey(userId)) {
+                double otherWeight = entry.getValue().get(userId);
+
+                // Упорядочиваем ID мероприятий для избежания дублирования
+                long firstEvent = Math.min(eventId, otherEventId);
+                long secondEvent = Math.max(eventId, otherEventId);
+
+                // Вычисляем изменение минимальных весов
+                double oldMin = Math.min(oldWeight, otherWeight);
+                double newMin = Math.min(newWeight, otherWeight);
+                double delta = newMin - oldMin;
+
+                // Обновляем сумму минимальных весов для пары мероприятий
+                pairMinWeights.putIfAbsent(firstEvent, new HashMap<>());
+                double currentSum = pairMinWeights.get(firstEvent).getOrDefault(secondEvent, 0.0);
+                double updatedSum = currentSum + delta;
+                pairMinWeights.get(firstEvent).put(secondEvent, updatedSum);
+
+                // Вычисляем новый коэффициент схожести
+                double otherTotalWeight = eventTotalWeights.get(otherEventId);
+                double score = calculateCosineSimilarity(
+                        eventTotalWeight,
+                        otherTotalWeight,
+                        updatedSum
+                );
+
+                // Добавляем результат, если коэффициент положительный
+                if (score > 0) {
+                    results.add(createSimilarityAvro(firstEvent, secondEvent, score));
                 }
             }
         }
-        return result;
+
+        return results;
+    }
+
+    /**
+     * Вычисляет косинусное сходство между двумя мероприятиями
+     * @param sumA Сумма весов для мероприятия A (S_i)
+     * @param sumB Сумма весов для мероприятия B (S_j)
+     * @param sumMin Сумма минимальных весов для пары (S_min(i,j))
+     * @return Значение косинусного сходства, округленное до 5 знаков
+     */
+    private double calculateCosineSimilarity(double sumA, double sumB, double sumMin) {
+        // Проверка на нулевые значения
+        if (sumA <= 0 || sumB <= 0 || sumMin <= 0) return 0;
+
+        // Вычисляем знаменатель - произведение корней из сумм весов
+        double denominator = Math.sqrt(sumA) * Math.sqrt(sumB);
+        if (denominator == 0) return 0;
+
+        // Основная формула косинусного сходства
+        double score = sumMin / denominator;
+
+        // Округление до 5 знаков после запятой согласно требованиям
+        return Math.round(score * 100000.0) / 100000.0;
+    }
+
+    /**
+     * Создает объект EventSimilarityAvro для отправки в Kafka
+     */
+    private EventSimilarityAvro createSimilarityAvro(long eventA, long eventB, double score) {
+        return EventSimilarityAvro.newBuilder()
+                .setEventA(eventA)
+                .setEventB(eventB)
+                .setScore((float) score)
+                .setTimestamp(Instant.now())
+                .build();
+    }
+
+    /**
+     * Возвращает вес действия в зависимости от его типа
+     */
+    private double getWeightByActionType(ActionTypeAvro actionType) {
+        return switch (actionType) {
+            case VIEW -> 0.4;      // Просмотр
+            case REGISTER -> 0.8;  // Регистрация
+            case LIKE -> 1.0;      // Лайк
+            default -> 0;          // Неизвестный тип
+        };
     }
 
     @Override
     public void collectEventSimilarity(EventSimilarityAvro eventSimilarityAvro) {
-        ProducerRecord<Long, SpecificRecordBase> rec = new ProducerRecord<>(
-                kafkaConfig.getKafkaProperties().getEventsSimilarityTopic(),
-                null,
-                eventSimilarityAvro.getTimestamp().toEpochMilli(),
-                eventSimilarityAvro.getEventA(),
-                eventSimilarityAvro);
-        producer.send(rec);
-    }
+        try {
+            // Создаем запись для отправки в Kafka
+            ProducerRecord<Long, SpecificRecordBase> record = new ProducerRecord<>(
+                    kafkaConfig.getKafkaProperties().getEventsSimilarityTopic(),
+                    eventSimilarityAvro.getEventA(),
+                    eventSimilarityAvro
+            );
 
-    @Override
-    public void close() {
-        SimilarityService.super.close();
-        if (producer != null) {
-            producer.close();
+            // Отправляем сообщение
+            producer.send(record);
+        } catch (Exception e) {
+            log.error("Ошибка при отправке сообщения в Kafka: {}", e.getMessage());
         }
     }
 
-    private void putEventMinSummaryWeights(long eventA, long eventB, double sum) {
-        long first = Math.min(eventA, eventB);
-        long second = Math.max(eventA, eventB);
-
-        eventMinSummaryWeights
-                .computeIfAbsent(first, e -> new HashMap<>())
-                .put(second, sum);
-    }
-
-    private double getEventMinSummaryWeights(long eventA, long eventB) {
-        long first = Math.min(eventA, eventB);
-        long second = Math.max(eventA, eventB);
-
-        return eventMinSummaryWeights
-                .computeIfAbsent(first, e -> new HashMap<>())
-                .getOrDefault(second, 0.0);
-    }
-
-    private double getWeightByActionType(ActionTypeAvro actionType) {
-        return switch (actionType) {
-            case VIEW -> 0.4;
-            case REGISTER -> 0.8;
-            case LIKE -> 1.0;
-        };
-    }
-
-    private double addOrUpdateEventWeightForUser(Long eventId, Long userId, double weight) {
-        double oldWeight = 0.0;
-        eventWeights.computeIfAbsent(eventId, e -> new HashMap<>()).putIfAbsent(userId, 0.0);
-        if (eventWeights.containsKey(eventId)) {
-            oldWeight = eventWeights.get(eventId).get(userId);
-            double maxWeight = Math.max(oldWeight, weight);
-            if (oldWeight != maxWeight) {
-                eventWeights.get(eventId).put(userId, maxWeight);
-                log.info("eventWeights updated for eventId = {}: new weight = {}", eventId, maxWeight);
-            }
-        }
-        return oldWeight;
-    }
-
-    private void reCalcEventMinSummaryWeights(Long eventId, Long userId) {
-        double weightForThisEvent = eventWeights.get(eventId).getOrDefault(userId, 0.0);
-        for (Long otherEvent : eventWeights.keySet()) {
-            if (!Objects.equals(otherEvent, eventId)) {
-                double weightForOtherEvent = eventWeights.get(otherEvent).getOrDefault(userId, 0.0);
-                double newMinWeight = Math.min(weightForThisEvent, weightForOtherEvent);
-                double oldMinWeight = getEventMinSummaryWeights(eventId, otherEvent);
-                putEventMinSummaryWeights(eventId, otherEvent, newMinWeight - oldMinWeight);
-            }
-        }
+    /**
+     * Очищает состояние сервиса (используется между тестами)
+     */
+    public void resetState() {
+        eventUserWeights.clear();
+        eventTotalWeights.clear();
+        pairMinWeights.clear();
+        log.info("Состояние сервиса было сброшено");
     }
 }
