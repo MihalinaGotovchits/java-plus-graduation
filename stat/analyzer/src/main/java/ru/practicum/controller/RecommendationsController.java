@@ -4,7 +4,7 @@ import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
-import ru.practicum.grpc.stat.analyzer.RecommendationsControllerGrpc;
+import ru.practicum.grpc.stat.dashboard.RecommendationsControllerGrpc;
 import ru.practicum.grpc.stat.request.InteractionsCountRequestProto;
 import ru.practicum.grpc.stat.request.RecommendedEventProto;
 import ru.practicum.grpc.stat.request.SimilarEventsRequestProto;
