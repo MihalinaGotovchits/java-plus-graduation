@@ -7,7 +7,7 @@ import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Component;
 import ru.practicum.grpc.stat.action.ActionTypeProto;
 import ru.practicum.grpc.stat.action.UserActionProto;
-import ru.practicum.grpc.stat.analyzer.RecommendationsControllerGrpc;
+import ru.practicum.grpc.stat.dashboard.RecommendationsControllerGrpc;
 import ru.practicum.grpc.stat.collector.UserActionControllerGrpc;
 import ru.practicum.grpc.stat.request.InteractionsCountRequestProto;
 import ru.practicum.grpc.stat.request.RecommendedEventProto;
