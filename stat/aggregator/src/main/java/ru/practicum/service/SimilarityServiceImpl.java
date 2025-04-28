@@ -11,6 +11,7 @@ import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 
+import java.time.Instant;
 import java.util.*;
 
 @Service
@@ -34,40 +35,37 @@ public class SimilarityServiceImpl implements SimilarityService {
         double receivedWeight = getWeightByActionType(userAction.getActionType());
         double oldWeight = addOrUpdateEventWeightForUser(eventId, userId, receivedWeight);
         double newWeight = Math.max(oldWeight, receivedWeight);
-        log.info("receivedWeight = {}, oldWeight = {}, newWeight = {}", receivedWeight, oldWeight, newWeight);
+
         if (oldWeight != newWeight) {
-            log.info("starting update similarity");
             eventSummaryWeights.put(eventId, eventSummaryWeights.getOrDefault(eventId, 0.0) + newWeight - oldWeight);
-            log.info("eventSummaryWeights updated: new summary weight for eventId = {} equals {}", eventId,
-                    eventSummaryWeights.get(eventId));
             reCalcEventMinSummaryWeights(eventId, userId);
 
             for (Long secondEvent : eventWeights.keySet()) {
                 if (!eventId.equals(secondEvent)) {
                     long eventA = Math.min(eventId, secondEvent);
                     long eventB = Math.max(eventId, secondEvent);
-                    double sumWeightA = eventSummaryWeights.get(eventA);
-                    double sumWeightB = eventSummaryWeights.get(eventB);
-                    log.info("eventA = {}, eventB = {}, sumWeightA = {}, sumWeightB = {}", eventA, eventB,
-                            sumWeightA, sumWeightB);
-                    if (sumWeightA + sumWeightB != 0) {
-                        double score = getEventMinSummaryWeights(eventA, eventB) /
+                    double sumWeightA = eventSummaryWeights.getOrDefault(eventA, 0.0);
+                    double sumWeightB = eventSummaryWeights.getOrDefault(eventB, 0.0);
+
+                    double score = 0.0;
+                    if (sumWeightA > 0 && sumWeightB > 0) {
+                        score = getEventMinSummaryWeights(eventA, eventB) /
                                 (Math.sqrt(sumWeightA) * Math.sqrt(sumWeightB));
-                        log.info("SCORE = {}", score);
+                        score = Math.round(score * 100.0) / 100.0;
+                    }
+
+                    if (score > 0) {
                         EventSimilarityAvro eventSimilarity = EventSimilarityAvro.newBuilder()
                                 .setEventA(eventA)
                                 .setEventB(eventB)
                                 .setScore(score)
-                                .setTimestamp(userAction.getTimestamp())
+                                .setTimestamp(Instant.now())
                                 .build();
-                        log.info("NEW EventSimilarityAvro = {}", eventSimilarity);
                         result.add(eventSimilarity);
                     }
-
                 }
             }
         }
-
         return result;
     }
 
@@ -116,7 +114,6 @@ public class SimilarityServiceImpl implements SimilarityService {
         };
     }
 
-    //return old weight
     private double addOrUpdateEventWeightForUser(Long eventId, Long userId, double weight) {
         double oldWeight = 0.0;
         eventWeights.computeIfAbsent(eventId, e -> new HashMap<>()).putIfAbsent(userId, 0.0);
