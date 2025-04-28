@@ -20,7 +20,7 @@ public class SimilarityServiceImpl implements SimilarityService {
     private final Producer<Long, SpecificRecordBase> producer;
     private final KafkaConfig kafkaConfig;
 
-    private final Map<Long, Map<Long, Double>> eventWeights = new HashMap<>(); //Map<eventId, Map<userId, Weight>>
+    private final Map<Long, Map<Long, Double>> eventWeights = new HashMap<>();
     private final Map<Long, Double> eventSummaryWeights = new HashMap<>();
     private final Map<Long, Map<Long, Double>> eventMinSummaryWeights = new HashMap<>();
 

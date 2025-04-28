@@ -7,8 +7,8 @@ kafka:
   eventsSimilarityTopic: stats.events-similarity.v1
 
   userActionConsumer:
-    groupId: aggregator-group
-    clientId: aggregator-consumer
+    groupId: analyzer-group
+    clientId: analyzer-consumer
     keyDeserializer: org.apache.kafka.common.serialization.LongDeserializer
     valueDeserializer: ru.practicum.avro.UserActionDeserializer
     enableAutoCommit: "false"
