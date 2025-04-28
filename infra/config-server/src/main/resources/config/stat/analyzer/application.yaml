@@ -1,5 +1,5 @@
 server:
-  port: 8887
+  port: 9090
 
 kafka:
   bootstrapServers: localhost:9092
@@ -39,6 +39,17 @@ logging.level:
   org.springframework.orm.jpa: INFO
   org.springframework.transaction: INFO
   ru.practicum: DEBUG
+---
+
+spring:
+  config:
+    activate:
+      on-profile: default
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/analyzer
+    username: root
+    password: root
 
 ---
 
