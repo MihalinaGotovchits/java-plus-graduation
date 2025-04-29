@@ -40,56 +40,74 @@ public class SimilarityServiceImpl implements SimilarityService {
         Long userId = userAction.getUserId();
         double newWeight = getWeightByActionType(userAction.getActionType());
 
-        // Инициализация структур данных при первом обращении
-        eventUserWeights.putIfAbsent(eventId, new HashMap<>());
+        log.debug("Received weight: {} for event: {}, user: {}", newWeight, eventId, userId);
 
-        // Получаем текущий максимальный вес пользователя для этого мероприятия
+        // Инициализация структур данных
+        eventUserWeights.putIfAbsent(eventId, new HashMap<>());
         double currentWeight = eventUserWeights.get(eventId).getOrDefault(userId, 0.0);
+        log.debug("Current weight: {} for event: {}, user: {}", currentWeight, eventId, userId);
 
         // Если новый вес не больше текущего - пропускаем обработку
         if (newWeight <= currentWeight) {
+            log.debug("Weight not increased, skipping processing");
             return results;
         }
 
         // Обновляем максимальный вес пользователя для мероприятия
         eventUserWeights.get(eventId).put(userId, newWeight);
+        log.debug("Updated user weight to: {} for event: {}, user: {}", newWeight, eventId, userId);
 
         // Обновляем общий вес мероприятия (S_i)
         double deltaWeight = newWeight - currentWeight;
-        eventTotalWeights.merge(eventId, deltaWeight, Double::sum);
+        double newTotalWeight = eventTotalWeights.merge(eventId, deltaWeight, Double::sum);
+        log.debug("Updated total weight for event {}: {}", eventId, newTotalWeight);
 
         // Пересчитываем схожесть с другими мероприятиями
         for (Map.Entry<Long, Map<Long, Double>> entry : eventUserWeights.entrySet()) {
             Long otherEventId = entry.getKey();
 
-            if (otherEventId.equals(eventId)) continue; // Пропускаем текущее мероприятие
+            if (otherEventId.equals(eventId)) {
+                log.debug("Skipping same event: {}", eventId);
+                continue;
+            }
 
-            // Проверяем, взаимодействовал ли пользователь с другим мероприятием
             if (entry.getValue().containsKey(userId)) {
                 double otherWeight = entry.getValue().get(userId);
+                log.debug("Found interaction with event: {}, weight: {}", otherEventId, otherWeight);
 
                 // Упорядочиваем ID мероприятий
                 long firstEvent = Math.min(eventId, otherEventId);
                 long secondEvent = Math.max(eventId, otherEventId);
+                log.debug("Processing pair: {} and {}", firstEvent, secondEvent);
 
                 // Вычисляем изменение минимальных весов
                 double oldMin = Math.min(currentWeight, otherWeight);
                 double newMin = Math.min(newWeight, otherWeight);
                 double deltaMin = newMin - oldMin;
+                log.debug("Min weights - old: {}, new: {}, delta: {}", oldMin, newMin, deltaMin);
 
                 // Обновляем сумму минимальных весов для пары
-                pairMinWeights.computeIfAbsent(firstEvent, k -> new HashMap<>())
-                        .merge(secondEvent, deltaMin, Double::sum);
+                Map<Long, Double> secondLevelMap = pairMinWeights.computeIfAbsent(firstEvent, k -> new HashMap<>());
+                double currentSum = secondLevelMap.getOrDefault(secondEvent, 0.0);
+                double updatedSum = currentSum + deltaMin;
+                secondLevelMap.put(secondEvent, updatedSum);
+
+                log.debug("Updated min weights sum for pair ({}, {}): was {}, now {}",
+                        firstEvent, secondEvent, currentSum, updatedSum);
 
                 // Вычисляем новый коэффициент схожести
-                double sumMin = pairMinWeights.get(firstEvent).get(secondEvent);
                 double sumA = eventTotalWeights.get(firstEvent);
                 double sumB = eventTotalWeights.get(secondEvent);
+                log.debug("Total weights - sumA: {}, sumB: {}", sumA, sumB);
 
-                double score = calculateCosineSimilarity(sumA, sumB, sumMin);
+                double score = calculateCosineSimilarity(sumA, sumB, updatedSum);
+                log.info("Calculated similarity score for events {} and {}: {}",
+                        firstEvent, secondEvent, score);
 
                 if (score > 0) {
-                    results.add(createSimilarityAvro(firstEvent, secondEvent, score));
+                    EventSimilarityAvro similarity = createSimilarityAvro(firstEvent, secondEvent, score);
+                    results.add(similarity);
+                    log.debug("Created similarity record: {}", similarity);
                 }
             }
         }
@@ -98,13 +116,33 @@ public class SimilarityServiceImpl implements SimilarityService {
     }
 
     private double calculateCosineSimilarity(double sumA, double sumB, double sumMin) {
-        if (sumA <= 0 || sumB <= 0 || sumMin <= 0) return 0;
+        if (sumA <= 0 || sumB <= 0 || sumMin <= 0) {
+            log.debug("Invalid input for similarity calculation - sumA: {}, sumB: {}, sumMin: {}",
+                    sumA, sumB, sumMin);
+            return 0;
+        }
 
-        double denominator = Math.sqrt(sumA) * Math.sqrt(sumB);
-        if (denominator == 0) return 0;
+        double sqrtA = Math.sqrt(sumA);
+        double sqrtB = Math.sqrt(sumB);
+        double denominator = sqrtA * sqrtB;
+
+        if (denominator == 0) {
+            log.debug("Denominator is zero - sumA: {}, sumB: {}", sumA, sumB);
+            return 0;
+        }
 
         double score = sumMin / denominator;
-        return Math.round(score * 100000.0) / 100000.0; // Округление до 5 знаков
+        double roundedScore = Math.round(score * 100000.0) / 100000.0;
+
+        log.debug("Similarity calculation details:");
+        log.debug("  sumMin: {}", sumMin);
+        log.debug("  sqrt(sumA): {}", sqrtA);
+        log.debug("  sqrt(sumB): {}", sqrtB);
+        log.debug("  denominator: {}", denominator);
+        log.debug("  raw score: {}", score);
+        log.debug("  rounded score: {}", roundedScore);
+
+        return roundedScore;
     }
 
     private EventSimilarityAvro createSimilarityAvro(long eventA, long eventB, double score) {
