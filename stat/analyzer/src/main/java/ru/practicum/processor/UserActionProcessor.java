@@ -42,7 +42,6 @@ public class UserActionProcessor implements Runnable {
                     manageOffsets(record, count, consumer);
                     count++;
                 }
-                consumer.commitAsync();
             }
 
         } catch (WakeupException ignores) {

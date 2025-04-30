@@ -44,7 +44,6 @@ public class EventSimilarityProcessor implements Runnable {
                     manageOffsets(record, count, consumer);
                     count++;
                 }
-                consumer.commitAsync();
             }
 
         } catch (WakeupException ignores) {

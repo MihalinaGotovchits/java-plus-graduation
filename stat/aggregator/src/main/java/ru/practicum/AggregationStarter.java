@@ -43,7 +43,6 @@ public class AggregationStarter {
                     manageOffsets(record, count, consumer);
                     count++;
                 }
-                consumer.commitAsync();
             }
 
         } catch (WakeupException ignores) {

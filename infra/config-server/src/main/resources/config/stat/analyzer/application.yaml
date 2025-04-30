@@ -35,22 +35,21 @@ spring:
         format_sql: true
   sql.init.mode: always
 
+logging:
+  file:
+    name: .diploma1/reportAnalyze.txt  # Точный указанный путь
+    max-size: 10MB
+    max-history: 1
+  level:
+    ru.practicum.repository: TRACE
+    ru.practicum.service: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
 logging.level:
   org.springframework.orm.jpa: INFO
   org.springframework.transaction: INFO
   ru.practicum: DEBUG
----
-
-spring:
-  config:
-    activate:
-      on-profile: default
-  datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/analyzer
-    username: root
-    password: root
-
 ---
 
 spring:

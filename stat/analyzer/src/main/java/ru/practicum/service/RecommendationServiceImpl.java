@@ -78,16 +78,23 @@ public class RecommendationServiceImpl implements RecommendationService {
     @Override
     public void saveUserAction(UserActionAvro userActionAvro) {
         UserAction userAction = Mapper.mapToUserAction(userActionAvro);
-        log.info("call saveUserAction for userActionAvro: {}", userActionAvro);
-        Optional<UserAction> oldUserAction = userActionRepository.findByUserIdAndEventId(userAction.getUserId(), userAction.getEventId());
+        log.info("Saving UserAction: userId={}, eventId={}, type={}, weight={}",
+                userAction.getUserId(), userAction.getEventId(), userAction.getActionType(), userAction.getWeight());
+
+        Optional<UserAction> oldUserAction = userActionRepository.findByUserIdAndEventId(
+                userAction.getUserId(), userAction.getEventId()
+        );
+
         if (oldUserAction.isPresent()) {
+            log.info("Updating existing UserAction: oldWeight={}", oldUserAction.get().getWeight());
             userAction.setId(oldUserAction.get().getId());
             if (userAction.getWeight() < oldUserAction.get().getWeight()) {
                 userAction.setWeight(oldUserAction.get().getWeight());
             }
         }
-        log.info("new UserAction is: {}", userAction);
-        userActionRepository.save(userAction);
+
+        UserAction savedAction = userActionRepository.save(userAction);
+        log.info("Saved UserAction: id={}, weight={}", savedAction.getId(), savedAction.getWeight());
     }
 
     private RecommendedEvent genRecommendedEventFrom(EventSimilarity eventSimilarity, Long eventId) {

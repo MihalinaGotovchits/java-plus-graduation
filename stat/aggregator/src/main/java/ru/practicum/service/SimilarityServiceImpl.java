@@ -21,13 +21,8 @@ public class SimilarityServiceImpl implements SimilarityService {
     private final Producer<Long, SpecificRecordBase> producer;
     private final KafkaConfig kafkaConfig;
 
-    // Хранит максимальные веса действий пользователей для каждого мероприятия
     private final Map<Long, Map<Long, Double>> eventUserWeights = new HashMap<>();
-
-    // Хранит суммарные веса для каждого мероприятия (S_i)
     private final Map<Long, Double> eventTotalWeights = new HashMap<>();
-
-    // Хранит суммы минимальных весов для пар мероприятий (S_min(i,j))
     private final Map<Long, Map<Long, Double>> pairMinWeights = new HashMap<>();
 
     @Override
@@ -42,27 +37,22 @@ public class SimilarityServiceImpl implements SimilarityService {
 
         log.debug("Received weight: {} for event: {}, user: {}", newWeight, eventId, userId);
 
-        // Инициализация структур данных
         eventUserWeights.putIfAbsent(eventId, new HashMap<>());
         double currentWeight = eventUserWeights.get(eventId).getOrDefault(userId, 0.0);
         log.debug("Current weight: {} for event: {}, user: {}", currentWeight, eventId, userId);
 
-        // Если новый вес не больше текущего - пропускаем обработку
         if (newWeight <= currentWeight) {
             log.debug("Weight not increased, skipping processing");
             return results;
         }
 
-        // Обновляем максимальный вес пользователя для мероприятия
         eventUserWeights.get(eventId).put(userId, newWeight);
         log.debug("Updated user weight to: {} for event: {}, user: {}", newWeight, eventId, userId);
 
-        // Обновляем общий вес мероприятия (S_i)
         double deltaWeight = newWeight - currentWeight;
         double newTotalWeight = eventTotalWeights.merge(eventId, deltaWeight, Double::sum);
         log.debug("Updated total weight for event {}: {}", eventId, newTotalWeight);
 
-        // Пересчитываем схожесть с другими мероприятиями
         for (Map.Entry<Long, Map<Long, Double>> entry : eventUserWeights.entrySet()) {
             Long otherEventId = entry.getKey();
 
@@ -75,18 +65,15 @@ public class SimilarityServiceImpl implements SimilarityService {
                 double otherWeight = entry.getValue().get(userId);
                 log.debug("Found interaction with event: {}, weight: {}", otherEventId, otherWeight);
 
-                // Упорядочиваем ID мероприятий
                 long firstEvent = Math.min(eventId, otherEventId);
                 long secondEvent = Math.max(eventId, otherEventId);
                 log.debug("Processing pair: {} and {}", firstEvent, secondEvent);
 
-                // Вычисляем изменение минимальных весов
                 double oldMin = Math.min(currentWeight, otherWeight);
                 double newMin = Math.min(newWeight, otherWeight);
                 double deltaMin = newMin - oldMin;
                 log.debug("Min weights - old: {}, new: {}, delta: {}", oldMin, newMin, deltaMin);
 
-                // Обновляем сумму минимальных весов для пары
                 Map<Long, Double> secondLevelMap = pairMinWeights.computeIfAbsent(firstEvent, k -> new HashMap<>());
                 double currentSum = secondLevelMap.getOrDefault(secondEvent, 0.0);
                 double updatedSum = currentSum + deltaMin;
@@ -95,7 +82,6 @@ public class SimilarityServiceImpl implements SimilarityService {
                 log.debug("Updated min weights sum for pair ({}, {}): was {}, now {}",
                         firstEvent, secondEvent, currentSum, updatedSum);
 
-                // Вычисляем новый коэффициент схожести
                 double sumA = eventTotalWeights.get(firstEvent);
                 double sumB = eventTotalWeights.get(secondEvent);
                 log.debug("Total weights - sumA: {}, sumB: {}", sumA, sumB);
@@ -133,15 +119,6 @@ public class SimilarityServiceImpl implements SimilarityService {
 
         double score = sumMin / denominator;
         double roundedScore = Math.round(score * 100000.0) / 100000.0;
-
-        log.debug("Similarity calculation details:");
-        log.debug("  sumMin: {}", sumMin);
-        log.debug("  sqrt(sumA): {}", sqrtA);
-        log.debug("  sqrt(sumB): {}", sqrtB);
-        log.debug("  denominator: {}", denominator);
-        log.debug("  raw score: {}", score);
-        log.debug("  rounded score: {}", roundedScore);
-
         return roundedScore;
     }
 
