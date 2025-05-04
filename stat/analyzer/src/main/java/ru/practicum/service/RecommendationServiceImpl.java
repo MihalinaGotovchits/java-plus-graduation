@@ -3,6 +3,7 @@ package ru.practicum.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 import ru.practicum.grpc.stat.request.InteractionsCountRequestProto;
 import ru.practicum.grpc.stat.request.RecommendedEventProto;
@@ -23,6 +24,7 @@ import static java.util.Collections.emptyList;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class RecommendationServiceImpl implements RecommendationService {
     private static final long EVENT_COUNT_PREDICTION = 5;
     private final EventSimilarityRepository eventSimilarityRepository;
@@ -76,6 +78,7 @@ public class RecommendationServiceImpl implements RecommendationService {
     }
 
     @Override
+    @Transactional
     public void saveUserAction(UserActionAvro userActionAvro) {
         UserAction userAction = Mapper.mapToUserAction(userActionAvro);
         log.info("Saving UserAction: userId={}, eventId={}, type={}, weight={}",
