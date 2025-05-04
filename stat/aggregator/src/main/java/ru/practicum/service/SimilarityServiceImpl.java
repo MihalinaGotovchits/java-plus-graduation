@@ -152,6 +152,14 @@ public class SimilarityServiceImpl implements SimilarityService {
         }
     }
 
+    @Override
+    public void close() {
+        SimilarityService.super.close();
+        if (producer != null) {
+            producer.close();
+        }
+    }
+
     public void resetState() {
         eventUserWeights.clear();
         eventTotalWeights.clear();
