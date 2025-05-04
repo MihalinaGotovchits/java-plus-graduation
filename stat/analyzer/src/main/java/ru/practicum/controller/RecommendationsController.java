@@ -22,33 +22,54 @@ public class RecommendationsController extends RecommendationsControllerGrpc.Rec
     @Override
     public void getRecommendationsForUser(UserPredictionsRequestProto request,
                                           StreamObserver<RecommendedEventProto> responseObserver) {
-        log.info("RecommendationsController call getRecommendationsForUser for request = {}", request);
-        List<RecommendedEventProto> recommendedEvents = recommendationService.generateRecommendationsForUser(request);
-        for (RecommendedEventProto event : recommendedEvents) {
-            responseObserver.onNext(event);
+        log.info("Получен запрос на рекомендации для пользователя: {}", request);
+        try {
+            List<RecommendedEventProto> recommendedEvents = recommendationService.generateRecommendationsForUser(request);
+            recommendedEvents.forEach(responseObserver::onNext);
+            responseObserver.onCompleted();
+            log.info("Успешно сформированы рекомендации для пользователя");
+        } catch (Exception e) {
+            log.error("Ошибка при формировании рекомендаций для пользователя: {}", request, e);
+            responseObserver.onError(io.grpc.Status.INTERNAL
+                    .withDescription("Ошибка сервера при получении рекомендаций: " + e.getMessage())
+                    .withCause(e)
+                    .asRuntimeException());
         }
-        responseObserver.onCompleted();
     }
 
     @Override
     public void getSimilarEvents(SimilarEventsRequestProto request,
                                  StreamObserver<RecommendedEventProto> responseObserver) {
-        log.info("RecommendationsController call getSimilarEvents for request = {}", request);
-        List<RecommendedEventProto> recommendedEvents = recommendationService.getSimilarEvents(request);
-        for (RecommendedEventProto event : recommendedEvents) {
-            responseObserver.onNext(event);
+        log.info("Получен запрос на поиск похожих событий: {}", request);
+        try {
+            List<RecommendedEventProto> similarEvents = recommendationService.getSimilarEvents(request);
+            similarEvents.forEach(responseObserver::onNext);
+            responseObserver.onCompleted();
+            log.info("Успешно найдены похожие события");
+        } catch (Exception e) {
+            log.error("Ошибка при поиске похожих событий: {}", request, e);
+            responseObserver.onError(io.grpc.Status.INTERNAL
+                    .withDescription("Ошибка сервера при поиске похожих событий: " + e.getMessage())
+                    .withCause(e)
+                    .asRuntimeException());
         }
-        responseObserver.onCompleted();
     }
 
     @Override
     public void getInteractionsCount(InteractionsCountRequestProto request,
                                      StreamObserver<RecommendedEventProto> responseObserver) {
-        log.info("RecommendationsController call getInteractionsCount for request = {}", request);
-        List<RecommendedEventProto> recommendedEvents = recommendationService.getInteractionsCount(request);
-        for (RecommendedEventProto event : recommendedEvents) {
-            responseObserver.onNext(event);
+        log.info("Получен запрос на получение количества взаимодействий: {}", request);
+        try {
+            List<RecommendedEventProto> interactions = recommendationService.getInteractionsCount(request);
+            interactions.forEach(responseObserver::onNext);
+            responseObserver.onCompleted();
+            log.info("Успешно получено количество взаимодействий");
+        } catch (Exception e) {
+            log.error("Ошибка при получении количества взаимодействий: {}", request, e);
+            responseObserver.onError(io.grpc.Status.INTERNAL
+                    .withDescription("Ошибка сервера при получении количества взаимодействий: " + e.getMessage())
+                    .withCause(e)
+                    .asRuntimeException());
         }
-        responseObserver.onCompleted();
     }
 }
