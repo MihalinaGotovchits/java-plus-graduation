@@ -57,6 +57,8 @@ public class AggregationStarter {
             } finally {
                 log.info("Закрываем консьюмер");
                 consumer.close();
+                log.info("Отправляем все сообщения из буфера продюсера");
+                similarityService.flush();
                 log.info("Закрываем продюсер");
                 similarityService.close();
             }

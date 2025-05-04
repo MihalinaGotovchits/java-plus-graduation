@@ -153,10 +153,22 @@ public class SimilarityServiceImpl implements SimilarityService {
     }
 
     @Override
-    public void close() {
-        SimilarityService.super.close();
+    public void flush() {
         if (producer != null) {
-            producer.close();
+            producer.flush();
+        }
+    }
+
+    @Override
+    public void close() {
+        try {
+            if (producer != null) {
+                producer.flush();
+            }
+        } finally {
+            if (producer != null) {
+                producer.close();
+            }
         }
     }
 
