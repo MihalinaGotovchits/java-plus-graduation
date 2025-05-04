@@ -20,7 +20,7 @@ logging.level:
   org.springframework.transaction: INFO
 
 server:
-  port: 8084
+  port: 0
 
 ---
 
