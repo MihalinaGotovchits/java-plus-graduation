@@ -6,27 +6,28 @@ import ru.practicum.ewm.dto.event.*;
 import ru.practicum.ewm.dto.location.LocationDto;
 import ru.practicum.ewm.dto.user.UserShortDto;
 import ru.practicum.ewm.event.model.Event;
+import ru.practicum.grpc.stat.request.RecommendedEventProto;
 
 import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface EventMapper {
     @Mapping(target = "confirmedRequests", ignore = true)
-    @Mapping(target = "views", ignore = true)
+    @Mapping(target = "rating", ignore = true)
     @Named(value = "EventShortDto")
     @Mapping(target = "initiator", source = "initiator")
     @Mapping(target = "id", source = "event.id")
     EventShortDto toShortDto(Event event, UserShortDto initiator);
 
     @Mapping(target = "confirmedRequests", ignore = true)
-    @Mapping(target = "views", ignore = true)
+    @Mapping(target = "rating", ignore = true)
     @Mapping(target = "id", source = "event.id")
     @Mapping(target = "location", source = "location")
     @Mapping(target = "initiator", source = "initiator")
     EventFullDto toFullDto(Event event, LocationDto location, UserShortDto initiator);
 
     @Mapping(target = "confirmedRequests", ignore = true)
-    @Mapping(target = "views", ignore = true)
+    @Mapping(target = "rating", ignore = true)
     EventFullDto toFullDto(Event event);
 
     List<EventFullDto> toFullDto(Iterable<Event> event);
@@ -61,4 +62,6 @@ public interface EventMapper {
     @Mapping(target = "publishedOn", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     Event update(@MappingTarget Event event, UpdateEventAdminRequestDto eventUpdateDto, Category category, Long locationId);
+
+    RecommendedEventDto map(RecommendedEventProto proto);
 }

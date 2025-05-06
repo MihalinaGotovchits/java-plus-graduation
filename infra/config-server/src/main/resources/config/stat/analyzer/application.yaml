@@ -1,0 +1,63 @@
+server:
+  port: 9090
+
+kafka:
+  bootstrapServers: localhost:9092
+  userActionTopic: stats.user-actions.v1
+  eventsSimilarityTopic: stats.events-similarity.v1
+
+  userActionConsumer:
+    groupId: analyzer-group
+    clientId: analyzer-consumer
+    keyDeserializer: org.apache.kafka.common.serialization.LongDeserializer
+    valueDeserializer: ru.practicum.avro.UserActionDeserializer
+    enableAutoCommit: "false"
+    maxPollRecords: 500
+    maxPollIntervalMs: 300000
+    sessionTimeoutMs: 10000
+
+  eventSimilarityConsumer:
+    groupId: event-similarity
+    clientId: event-similarity-client
+    keyDeserializer: org.apache.kafka.common.serialization.LongDeserializer
+    valueDeserializer: ru.practicum.avro.EventSimilarityDeserializer
+    enableAutoCommit: "false"
+    maxPollRecords: 500
+    maxPollIntervalMs: 300000
+    sessionTimeoutMs: 10000
+
+spring:
+  jpa:
+    hibernate.ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  sql.init.mode: always
+
+logging:
+  file:
+    name: .diploma1/reportAnalyze.txt  # Точный указанный путь
+    max-size: 10MB
+    max-history: 1
+  level:
+    ru.practicum.repository: TRACE
+    ru.practicum.service: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+logging.level:
+  org.springframework.orm.jpa: INFO
+  org.springframework.transaction: INFO
+  ru.practicum: DEBUG
+---
+
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:analyzer
+    username: stats
+    password: stats

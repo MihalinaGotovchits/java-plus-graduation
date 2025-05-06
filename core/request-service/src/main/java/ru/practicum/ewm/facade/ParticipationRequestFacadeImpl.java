@@ -11,7 +11,10 @@ import ru.practicum.ewm.dto.request.ParticipationRequestStatus;
 import ru.practicum.ewm.dto.user.UserShortDto;
 import ru.practicum.ewm.error.exception.NotFoundException;
 import ru.practicum.ewm.service.ParticipationRequestService;
+import ru.practicum.grpc.stat.action.ActionTypeProto;
+import ru.practicum.stats.client.StatClient;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -19,14 +22,18 @@ import java.util.List;
 public class ParticipationRequestFacadeImpl implements ParticipationRequestFacade {
     private final EventClient eventClient;
     private final UserClient userClient;
-
+    private final StatClient statClient;
     private final ParticipationRequestService requestService;
 
     @Override
     public ParticipationRequestDto create(Long userId, Long eventId) {
         checkAndGetUserById(userId);
         EventFullDto eventFullDto = checkAndGetEventById(eventId);
-        return requestService.create(userId, eventFullDto);
+
+        ParticipationRequestDto participationRequestDto = requestService.create(userId, eventFullDto);
+        statClient.registerUserAction(eventId, userId, ActionTypeProto.ACTION_REGISTER, Instant.now());
+
+        return participationRequestDto;
     }
 
     @Override

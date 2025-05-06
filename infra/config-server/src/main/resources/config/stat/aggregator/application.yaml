@@ -1,0 +1,20 @@
+server:
+  port: 8889
+
+kafka:
+  bootstrapServers: localhost:9092
+  producerClientIdConfig: aggregator-producer
+  producerKeySerializer: org.apache.kafka.common.serialization.LongSerializer
+  producerValueSerializer: ru.practicum.avro.AvroSerializer
+  consumerGroupId: aggregator-group
+  consumerClientIdConfig: aggregator-consumer
+  consumerKeyDeserializer: org.apache.kafka.common.serialization.LongDeserializer
+  consumerValueDeserializer: ru.practicum.avro.UserActionDeserializer
+  consumerEnableAutoCommit: "false"
+  userActionTopic: stats.user-actions.v1
+  eventsSimilarityTopic: stats.events-similarity.v1
+
+logging:
+  level:
+    ru.practicum: debug
+    root: info
